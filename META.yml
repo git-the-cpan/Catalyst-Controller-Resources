@@ -20,4 +20,4 @@ requires:
   Catalyst::Devel: 0
   Catalyst::Runtime: 5.7
   Class::C3: 0
-version: 0.01
+version: 0.02
