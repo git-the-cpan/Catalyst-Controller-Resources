@@ -5,7 +5,7 @@ use warnings;
 use base 'Catalyst::Controller::Resource';
 use Catalyst::Utils;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub setup_collection_actions {
     my $self = shift;
@@ -187,6 +187,8 @@ called by B<GET /member/{member_id}/edit> request
 =head1 AUTHOR
 
 NAKAGAWA Masaki E<lt>masaki@cpan.orgE<gt>
+
+Daisuke Murase E<lt>typester@cpan.orgE<gt>
 
 =head1 LICENSE
 

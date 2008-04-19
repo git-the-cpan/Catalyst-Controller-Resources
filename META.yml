@@ -1,23 +1,22 @@
---- 
-abstract: Catalyst Collection Resources Controller
-author: 
-  - NAKAGAWA Masaki <masaki@cpan.org>
-build_requires: 
+---
+abstract: 'Catalyst Collection Resources Controller'
+author:
+  - 'NAKAGAWA Masaki <masaki@cpan.org>'
+build_requires:
   HTTP::Request: 0
   Test::More: 0
 distribution_type: module
-generated_by: Module::Install version 0.68
+generated_by: 'Module::Install version 0.71'
 license: perl
-meta-spec: 
+meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
   version: 1.3
 name: Catalyst-Controller-Resources
-no_index: 
-  directory: 
+no_index:
+  directory:
     - inc
     - t
-requires: 
-  Catalyst::Devel: 0
+requires:
   Catalyst::Runtime: 5.7
   Class::C3: 0
-version: 0.02
+version: 0.03
