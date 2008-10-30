@@ -2,6 +2,7 @@ Changes
 inc/HTTP/Request.pm
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -18,6 +19,7 @@ inc/Test/Base/Filter.pm
 inc/Test/Builder.pm
 inc/Test/Builder/Module.pm
 inc/Test/More.pm
+inc/Test/use/ok.pm
 lib/Catalyst/Controller/Resource.pm
 lib/Catalyst/Controller/Resources.pm
 lib/Catalyst/Controller/SingletonResource.pm
@@ -32,11 +34,19 @@ t/01_resources.t
 t/02_nested_resources.t
 t/03_namespace_nested_resources.t
 t/04_singleton_resource.t
+t/05_deep_endpoint.t
+t/06_path_prefix.t
 t/lib/TestApp.pm
 t/lib/TestApp/Controller/Account.pm
+t/lib/TestApp/Controller/Foo/Bar.pm
+t/lib/TestApp/Controller/Foo/Bar/Buz.pm
 t/lib/TestApp/Controller/Messages.pm
 t/lib/TestApp/Controller/Pages.pm
 t/lib/TestApp/Controller/Root.pm
 t/lib/TestApp/Controller/Users.pm
 t/lib/TestApp/Controller/Users/Articles.pm
 t/lib/TestApp/Controller/Users/Articles/Comments.pm
+t/lib/TestApp/Controller/Users/Date.pm
+xt/01_pod.t
+xt/02_podcoverage.t
+xt/03_podspell.t
