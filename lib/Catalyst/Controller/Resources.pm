@@ -1,36 +1,45 @@
 package Catalyst::Controller::Resources;
 
-use strict;
-use warnings;
-use base 'Catalyst::Controller::Resource';
-use Catalyst::Utils;
+use 5.008_001;
+use Moose;
+use namespace::clean -except => ['meta'];
 
-our $VERSION = '0.04';
+BEGIN { extends 'Catalyst::Controller' }
 
-sub setup_collection_actions {
-    my $self = shift;
+our $VERSION = '0.05';
 
-    my $maps = Catalyst::Utils::merge_hashes($self->{collection} || {}, {
-        list   => { method => 'GET',  path => '' },
-        create => { method => 'POST', path => '' },
-        post   => { method => 'GET',  path => 'new' },
-    });
-    $self->setup_actions(collection => $maps);
-}
+with qw(
+    Catalyst::Controller::Resources::Role::BuildActions
+    Catalyst::Controller::Resources::Role::ParseAttributes
+    Catalyst::Controller::Resources::Role::ActionRole
+);
 
-sub setup_member_actions {
-    my $self = shift;
+has '+_default_collection_actions' => (
+    default  => sub {
+        +{
+            list   => { method => 'GET',  path => '' },
+            create => { method => 'POST', path => '' },
+            post   => { method => 'GET',  path => 'new' },
+        },
+    },
+);
 
-    my $maps = Catalyst::Utils::merge_hashes($self->{member} || {}, {
-        show    => { method => 'GET',    path => '' },
-        update  => { method => 'PUT',    path => '' },
-        destroy => { method => 'DELETE', path => '' },
-        edit    => { method => 'GET' },
-    });
-    $self->setup_actions(member => $maps);
-}
+has '+_default_member_actions' => (
+    default  => sub {
+        +{
+            show    => { method => 'GET',    path => '' },
+            update  => { method => 'PUT',    path => '' },
+            destroy => { method => 'DELETE', path => '' },
+            edit    => { method => 'GET',    path => 'edit' },
+            delete  => { method => 'GET',    path => 'delete' },
+        },
+    },
+);
 
-1;
+sub _COLLECTION :ResourceChained ResourcePathPart CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePathPart CaptureArgs(1) {}
+
+__PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
@@ -165,6 +174,11 @@ post.tt:
     </body>
   </html>
 
+=head1 CAUTION
+
+This version works under Catalyst 5.8 (catamoose).
+If you use this module with Catalyst 5.7, please check out version 0.04.
+
 =head1 DESCRIPTION
 
 This controller defines HTTP verb-oriented actions for collection resource,
@@ -178,9 +192,7 @@ In your controller:
 This base controller exports Catalyst action attributes to your controller,
 and setup collection resource as B</books>.
 
-=head1 METHODS
-
-=head2 RESERVED SUBROUTINES (ACTIONS)
+=head1 RESERVED ACTIONS
 
 =over
 
@@ -211,16 +223,6 @@ called by B<GET /collection/new> request
 =item edit
 
 called by B<GET /member/{member_id}/edit> request
-
-=back
-
-=head2 INTERNAL METHODS
-
-=over
-
-=item setup_collection_actions
-
-=item setup_member_actions
 
 =back
 

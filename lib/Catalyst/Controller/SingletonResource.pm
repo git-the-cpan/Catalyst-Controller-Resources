@@ -1,37 +1,44 @@
 package Catalyst::Controller::SingletonResource;
 
-use strict;
-use warnings;
-use base 'Catalyst::Controller::Resource';
-use Catalyst::Utils;
+use Moose;
+use namespace::clean -except => ['meta'];
 
-our $VERSION = '0.03';
+BEGIN { extends 'Catalyst::Controller' }
 
-sub setup_collection_actions {
-    my $self = shift;
+require Catalyst::Controller::Resources;
+our $VERSION = $Catalyst::Controller::Resources::VERSION;
 
-    my $maps = Catalyst::Utils::merge_hashes($self->{collection} || {}, {
-        create => { method => 'POST', path => '' },
-        post   => { method => 'GET',  path => 'new' },
-    });
-    $self->setup_actions(collection => $maps);
-}
+with qw(
+    Catalyst::Controller::Resources::Role::BuildActions
+    Catalyst::Controller::Resources::Role::ParseAttributes
+    Catalyst::Controller::Resources::Role::ActionRole
+);
 
-sub setup_member_actions {
-    my $self = shift;
+has '+_default_collection_actions' => (
+    default  => sub {
+        +{
+            create => { method => 'POST', path => '' },
+            post   => { method => 'GET',  path => 'new' },
+        },
+    },
+);
 
-    my $maps = Catalyst::Utils::merge_hashes($self->{member} || {}, {
-        show    => { method => 'GET',    path => '' },
-        update  => { method => 'PUT',    path => '' },
-        destroy => { method => 'DELETE', path => '' },
-        edit    => { method => 'GET' },
-    });
-    $self->setup_actions(member => $maps);
-}
+has '+_default_member_actions' => (
+    default  => sub {
+        +{
+            show    => { method => 'GET',    path => '' },
+            update  => { method => 'PUT',    path => '' },
+            destroy => { method => 'DELETE', path => '' },
+            edit    => { method => 'GET',    path => 'edit' },
+            delete  => { method => 'GET',    path => 'delete' },
+        },
+    },
+);
 
-sub _member_attributes { qw/Chained('collection') PathPart('') CaptureArgs(0)/ }
+sub _COLLECTION :ResourceChained ResourcePathPart CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePathPart CaptureArgs(0) {}
 
-1;
+__PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
@@ -85,9 +92,7 @@ In your controller:
 This base controller exports Catalyst action attributes to your controller,
 and setup singleton resource as B</account>.
 
-=head1 METHODS
-
-=head2 RESERVED SUBROUTINES (ACTIONS)
+=head1 RESERVED ACTIONS
 
 =over
 
@@ -115,15 +120,9 @@ called by B<GET /resource/new> request
 
 called by B<GET /resource/edit> request
 
-=back
+=item delete
 
-=head2 INTERNAL METHODS
-
-=over
-
-=item setup_collection_actions
-
-=item setup_member_actions
+called by B<GET /resource/delete> request
 
 =back
 
