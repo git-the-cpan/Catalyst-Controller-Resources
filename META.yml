@@ -5,6 +5,7 @@ author:
 build_requires:
   ExtUtils::MakeMaker: 6.42
   HTTP::Request: 0
+  MRO::Compat: 0
   Test::More: 0
   Test::UseAllModules: 0
 configure_requires:
@@ -25,10 +26,10 @@ requires:
   Catalyst::Runtime: 5.80003
   Class::MOP: 0.84
   Filter::Util::Call: 0
-  Moose: 0.78
+  Moose: 0.79
   namespace::clean: 0
   perl: 5.8.1
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/masaki/catalyst-controller-resources.git
-version: 0.06
+version: 0.07
