@@ -72,7 +72,6 @@ inc/URI/urn/oid.pm
 inc/URI/WithBase.pm
 lib/Catalyst/Controller/Resources.pm
 lib/Catalyst/Controller/Resources/ActionRole/ResourceAction.pm
-lib/Catalyst/Controller/Resources/Role/ActionRole.pm
 lib/Catalyst/Controller/Resources/Role/BuildActions.pm
 lib/Catalyst/Controller/Resources/Role/ParseAttributes.pm
 lib/Catalyst/Controller/SingletonResource.pm
@@ -95,13 +94,16 @@ t/lib/TestApp/DeepEndpoint.pm
 t/lib/TestApp/DeepEndpoint/Controller/Foo/Bar.pm
 t/lib/TestApp/DeepEndpoint/Controller/Foo/Bar/Buz.pm
 t/lib/TestApp/DeepEndpoint/Controller/Root.pm
+t/lib/TestApp/PathPrefix.pm
+t/lib/TestApp/PathPrefix/Controller/Root.pm
+t/lib/TestApp/PathPrefix/Controller/Users.pm
+t/lib/TestApp/PathPrefix/Controller/Users/Date.pm
 t/lib/TestApp/Resources.pm
 t/lib/TestApp/Resources/Controller/Pages.pm
 t/lib/TestApp/Resources/Controller/Root.pm
 t/lib/TestApp/Resources/Controller/Users.pm
 t/lib/TestApp/Resources/Controller/Users/Articles.pm
 t/lib/TestApp/Resources/Controller/Users/Articles/Comments.pm
-t/lib/TestApp/Resources/Controller/Users/Date.pm
 t/lib/TestApp/Singleton.pm
 t/lib/TestApp/Singleton/Controller/Account.pm
 t/lib/TestApp/Singleton/Controller/Messages.pm

@@ -3,14 +3,17 @@ package Catalyst::Controller::SingletonResource;
 use Moose;
 use namespace::clean -except => ['meta'];
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::ActionRole' }
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
+
+__PACKAGE__->config(
+    action_roles => [ '+Catalyst::Controller::Resources::ActionRole::ResourceAction' ],
+);
 
 with qw(
     Catalyst::Controller::Resources::Role::BuildActions
     Catalyst::Controller::Resources::Role::ParseAttributes
-    Catalyst::Controller::Resources::Role::ActionRole
 );
 
 has '+_default_collection_actions' => (
@@ -47,32 +50,32 @@ Catalyst::Controller::SingletonResource - Catalyst Singleton Resource Controller
 
   package MyApp::Controller::Account;
   use base 'Catalyst::Controller::SingletonResource';
-  
+
   # POST /account
   sub create {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account
   sub show {
       my ($self, $c) = @_;
   }
-  
+
   # PUT /account
   sub update {
       my ($self, $c) = @_;
   }
-  
+
   # DELETE /account
   sub destroy {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account/new
   sub post {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account/edit
   sub edit {
       my ($self, $c) = @_;

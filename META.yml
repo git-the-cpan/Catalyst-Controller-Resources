@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.88'
+generated_by: 'Module::Install version 0.91'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -23,7 +23,8 @@ no_index:
     - t
     - xt
 requires:
-  Catalyst::Runtime: 5.80003
+  Catalyst::Controller::ActionRole: 0.12
+  Catalyst::Runtime: 5.80011
   Class::MOP: 0.84
   Filter::Util::Call: 0
   Moose: 0.79
@@ -32,4 +33,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/masaki/catalyst-controller-resources.git
-version: 0.07
+version: 0.08

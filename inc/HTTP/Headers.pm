@@ -5,7 +5,7 @@ use strict;
 use Carp ();
 
 use vars qw($VERSION $TRANSLATE_UNDERSCORE);
-$VERSION = "5.822";
+$VERSION = "5.827";
 
 # The $TRANSLATE_UNDERSCORE variable controls whether '_' can be used
 # as a replacement for '-' in header field names.
@@ -312,6 +312,37 @@ sub content_type      {
 	$_ = lc($_);
     }
     wantarray ? @ct : $ct[0];
+}
+
+sub content_type_charset {
+    my $self = shift;
+    require HTTP::Headers::Util;
+    my $h = $self->{'content-type'};
+    $h = $h->[0] if ref($h);
+    $h = "" unless defined $h;
+    my @v = HTTP::Headers::Util::split_header_words($h);
+    if (@v) {
+	my($ct, undef, %ct_param) = @{$v[0]};
+	my $charset = $ct_param{charset};
+	if ($ct) {
+	    $ct = lc($ct);
+	    $ct =~ s/\s+//;
+	}
+	if ($charset) {
+	    $charset = uc($charset);
+	    $charset =~ s/^\s+//;  $charset =~ s/\s+\z//;
+	    undef($charset) if $charset eq "";
+	}
+	return $ct, $charset if wantarray;
+	return $charset;
+    }
+    return undef, undef if wantarray;
+    return undef;
+}
+
+sub content_is_text {
+    my $self = shift;
+    return $self->content_type =~ m,^text/,;
 }
 
 sub content_is_html {

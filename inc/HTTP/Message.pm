@@ -3,7 +3,7 @@ package HTTP::Message;
 
 use strict;
 use vars qw($VERSION $AUTOLOAD);
-$VERSION = "5.826";
+$VERSION = "5.831";
 
 require HTTP::Headers;
 require Carp;
@@ -195,6 +195,95 @@ sub content_ref
 }
 
 
+sub content_charset
+{
+    my $self = shift;
+    if (my $charset = $self->content_type_charset) {
+	return $charset;
+    }
+
+    # time to start guessing
+    my $cref = $self->decoded_content(ref => 1, charset => "none");
+
+    # Unicode BOM
+    local $_;
+    for ($$cref) {
+	return "UTF-8"     if /^\xEF\xBB\xBF/;
+	return "UTF-32-LE" if /^\xFF\xFE\x00\x00/;
+	return "UTF-32-BE" if /^\x00\x00\xFE\xFF/;
+	return "UTF-16-LE" if /^\xFF\xFE/;
+	return "UTF-16-BE" if /^\xFE\xFF/;
+    }
+
+    if ($self->content_is_xml) {
+	# http://www.w3.org/TR/2006/REC-xml-20060816/#sec-guessing
+	# XML entity not accompanied by external encoding information and not
+	# in UTF-8 or UTF-16 encoding must begin with an XML encoding declaration,
+	# in which the first characters must be '<?xml'
+	for ($$cref) {
+	    return "UTF-32-BE" if /^\x00\x00\x00</;
+	    return "UTF-32-LE" if /^<\x00\x00\x00/;
+	    return "UTF-16-BE" if /^(?:\x00\s)*\x00</;
+	    return "UTF-16-LE" if /^(?:\s\x00)*<\x00/;
+	    if (/^\s*(<\?xml[^\x00]*?\?>)/) {
+		if ($1 =~ /\sencoding\s*=\s*(["'])(.*?)\1/) {
+		    my $enc = $2;
+		    $enc =~ s/^\s+//; $enc =~ s/\s+\z//;
+		    return $enc if $enc;
+		}
+	    }
+	}
+	return "UTF-8";
+    }
+    elsif ($self->content_is_html) {
+	# look for <META charset="..."> or <META content="...">
+	# http://dev.w3.org/html5/spec/Overview.html#determining-the-character-encoding
+	my $charset;
+	require HTML::Parser;
+	my $p = HTML::Parser->new(
+	    start_h => [sub {
+		my($tag, $attr, $self) = @_;
+		$charset = $attr->{charset};
+		unless ($charset) {
+		    # look at $attr->{content} ...
+		    if (my $c = $attr->{content}) {
+			require HTTP::Headers::Util;
+			my @v = HTTP::Headers::Util::split_header_words($c);
+			my($ct, undef, %ct_param) = @{$v[0]};
+			$charset = $ct_param{charset};
+		    }
+		    return unless $charset;
+		}
+		if ($charset =~ /^utf-?16/i) {
+		    # converted document, assume UTF-8
+		    $charset = "UTF-8";
+		}
+		$self->eof;
+	    }, "tagname, attr, self"],
+	    report_tags => [qw(meta)],
+	    utf8_mode => 1,
+	);
+	$p->parse($$cref);
+	return $charset if $charset;
+    }
+    if ($self->content_type =~ /^text\//) {
+	for ($$cref) {
+	    if (length) {
+		return "US-ASCII" unless /[\x80-\xFF]/;
+		require Encode;
+		eval {
+		    Encode::decode_utf8($_, Encode::FB_CROAK());
+		};
+		return "UTF-8" unless $@;
+		return "ISO-8859-1";
+	    }
+	}
+    }
+
+    return undef;
+}
+
+
 sub decoded_content
 {
     my($self, %opt) = @_;
@@ -202,14 +291,6 @@ sub decoded_content
     my $content_ref_iscopy;
 
     eval {
-
-	require HTTP::Headers::Util;
-	my($ct, %ct_param);
-	if (my @ct = HTTP::Headers::Util::split_header_words($self->header("Content-Type"))) {
-	    ($ct, undef, %ct_param) = @{$ct[-1]};
-	    die "Can't decode multipart content" if $ct =~ m,^multipart/,;
-	}
-
 	$content_ref = $self->content_ref;
 	die "Can't decode ref content" if ref($content_ref) ne "SCALAR";
 
@@ -232,14 +313,35 @@ sub decoded_content
 		}
 		elsif ($ce eq "x-bzip2") {
 		    require Compress::Bzip2;
+		    my $i = Compress::Bzip2::bzinflateInit() or
+			die "Can't init bzip2 inflater: $Compress::Bzip2::bzerrno";
 		    unless ($content_ref_iscopy) {
-			# memBunzip is documented to destroy its buffer argument
+			# the $i->bzinflate method is documented to destroy its
+			# buffer argument
 			my $copy = $$content_ref;
 			$content_ref = \$copy;
 			$content_ref_iscopy++;
 		    }
-		    $content_ref = \Compress::Bzip2::memBunzip($$content_ref);
-		    die "Can't bunzip content" unless defined $$content_ref;
+		    # TODO: operate on the ref when rt#48124 is fixed
+		    my ($out, $status) = $i->bzinflate($$content_ref);
+		    my $bzerr = "";
+		    # TODO: drop $out definedness part when rt#48124 is fixed
+		    if (!defined($out) &&
+			$status != Compress::Bzip2::BZ_STREAM_END()) {
+			if ($status == Compress::Bzip2::BZ_OK()) {
+			    $self->push_header("Client-Warning" =>
+			       "Content might be truncated; incomplete bzip2 stream");
+			}
+			else {
+			    # something went bad, can't trust $out any more
+			    $out = undef;
+			    # $bzerrno has more info than $i->bzerror or $status
+			    $bzerr = ": $Compress::Bzip2::bzerrno";
+			}
+		    }
+		    die "Can't bunzip content$bzerr" unless defined $out;
+		    $content_ref = \$out;
+		    $content_ref_iscopy++;
 		}
 		elsif ($ce eq "deflate") {
 		    require Compress::Zlib;
@@ -297,10 +399,15 @@ sub decoded_content
 	    }
 	}
 
-	if ($ct && $ct =~ m,^text/,,) {
-	    my $charset = $opt{charset} || $ct_param{charset} || $opt{default_charset} || "ISO-8859-1";
-	    $charset = lc($charset);
-	    if ($charset ne "none") {
+	if ($self->content_is_text || $self->content_is_xml) {
+	    my $charset = lc(
+	        $opt{charset} ||
+		$self->content_type_charset ||
+		$opt{default_charset} ||
+		$self->content_charset ||
+		"ISO-8859-1"
+	    );
+	    unless ($charset =~ /^(?:none|us-ascii|iso-8859-1)\z/) {
 		require Encode;
 		if (do{my $v = $Encode::VERSION; $v =~ s/_//g; $v} < 2.0901 &&
 		    !$content_ref_iscopy)
@@ -387,7 +494,15 @@ sub encode
 	}
 	elsif ($encoding eq "x-bzip2") {
 	    require Compress::Bzip2;
-	    $content = Compress::Bzip2::memGzip($content);
+	    my $d = Compress::Bzip2::bzdeflateInit() or
+		die "Can't init bzip2 deflater: $Compress::Bzip2::bzerrno";
+	    ($content, my $status) = $d->bzdeflate($content);
+	    die "Can't bzip content: $Compress::Bzip2::bzerrno"
+		unless $status == Compress::Bzip2::BZ_OK();
+	    (my $rest, $status) = $d->bzclose;
+	    die "Can't bzip content: $Compress::Bzip2::bzerrno"
+		unless $status == Compress::Bzip2::BZ_OK();
+	    $content .= $rest if defined $rest;
 	}
 	elsif ($encoding eq "rot13") {  # for the fun of it
 	    $content =~ tr/A-Za-z/N-ZA-Mn-za-m/;

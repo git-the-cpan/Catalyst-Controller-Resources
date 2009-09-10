@@ -7,7 +7,7 @@ use warnings;
 
 use Carp 'confess';
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub merge {
     my ($root, $parent_fetcher, $cache) = @_;
@@ -86,7 +86,7 @@ sub merge {
                     if(!$winner) {              # looking for a winner
                         $cand = $_->[0];        # seq head is candidate
                         next if $tails{$cand};  # he loses if in %tails
-                        
+
                         # Handy warn to give a output like the ones on
                         # http://www.python.org/download/releases/2.3/mro/
                         #warn " = " . join(' + ', @res) . "  + merge([" . join('] [',  map { join(', ', @$_) } grep { @$_ } @seqs) . "])\n";
@@ -99,11 +99,11 @@ sub merge {
                         $tails{$_->[0]}-- if @$_; # keep %tails sane
                     }
                 }
-                
+
                 # Handy warn to give a output like the ones on
                 # http://www.python.org/download/releases/2.3/mro/
-                #warn " = " . join(' + ', @res) . "\n" if !$cand; 
-                
+                #warn " = " . join(' + ', @res) . "\n" if !$cand;
+
                 last if !$cand;
                 die q{Inconsistent hierarchy found while merging '}
                     . $current_root . qq{':\n\t}

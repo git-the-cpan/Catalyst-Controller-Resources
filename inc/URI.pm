@@ -3,7 +3,7 @@ package URI;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = "1.37";
+$VERSION = "1.40";
 
 use vars qw($ABS_REMOTE_LEADING_DOTS $ABS_ALLOW_RELATIVE_SCHEME $DEFAULT_QUERY_FORM_DELIMITER);
 
@@ -108,7 +108,7 @@ sub implementor
     # preloaded (with 'use') implementation
     $ic = "URI::$scheme";  # default location
 
-    # turn scheme into a valid perl identifier by a simple tranformation...
+    # turn scheme into a valid perl identifier by a simple transformation...
     $ic =~ s/\+/_P/g;
     $ic =~ s/\./_O/g;
     $ic =~ s/\-/_/g;

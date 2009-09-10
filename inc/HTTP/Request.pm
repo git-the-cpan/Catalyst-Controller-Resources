@@ -3,7 +3,7 @@ package HTTP::Request;
 
 require HTTP::Message;
 @ISA = qw(HTTP::Message);
-$VERSION = "5.818";
+$VERSION = "5.827";
 
 use strict;
 
@@ -120,7 +120,7 @@ sub as_string
 sub dump
 {
     my $self = shift;
-    my @pre = ($self->method || "-", $self->url || "-");
+    my @pre = ($self->method || "-", $self->uri || "-");
     if (my $prot = $self->protocol) {
 	push(@pre, $prot);
     }
